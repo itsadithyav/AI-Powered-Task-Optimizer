@@ -1,0 +1,9 @@
+# requirements.txt
+opencv-python>=4.5.0
+numpy>=1.19.0
+tensorflow>=2.5.0
+scipy>=1.7.0
+keras>=2.5.0
+
+# Optional but recommended for better performance
+tensorflow-gpu>=2.5.0  # If you have a CUDA-capable GPU
