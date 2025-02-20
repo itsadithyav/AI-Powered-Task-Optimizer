@@ -4,7 +4,7 @@ from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Dropout, Flatten
 from tensorflow.keras.optimizers import Adam
 
-MODEL_PATH = 'emotion_model_best.h5'
+MODEL_PATH = 'Models/emotion_model_best.keras'
 
 def create_or_load_model():
     """

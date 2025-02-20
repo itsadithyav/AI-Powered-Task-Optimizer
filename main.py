@@ -7,7 +7,7 @@ from scipy.ndimage import gaussian_filter
 import time
 
 class EmotionDetectionSystem:
-    def __init__(self, model_path='emotion_model_best.h5'):
+    def __init__(self, model_path='Models/emotion_model_best.keras'):
         self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         self.emotion_model = load_model(model_path)
 
@@ -79,7 +79,7 @@ def main():
     st.title("Real-time Emotion Detection")
     st.write("This is a real-time emotion detection system using your webcam.")
 
-    system = EmotionDetectionSystem(model_path='emotion_model_best.h5')
+    system = EmotionDetectionSystem(model_path='Models/emotion_model_best.keras')
 
     # Streamlit Video placeholder
     video_placeholder = st.empty()

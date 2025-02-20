@@ -19,7 +19,7 @@ tf.keras.mixed_precision.set_global_policy('mixed_float16')
 tf.data.experimental.enable_debug_mode()  # Debugging data pipeline issues
 
 
-MODEL_PATH = 'emotion_model_best.keras'
+MODEL_PATH = 'Models/emotion_model_best.keras'
 
 # Ensure GPU memory is used efficiently
 gpus = tf.config.list_physical_devices('GPU')
