@@ -13,14 +13,14 @@ def hash_password(password):
 
 def load_users():
     try:
-        with open("users.txt", "r") as file:
+        with open("data/users.txt", "r") as file:
             users = dict(line.strip().split(":") for line in file)
         return users
     except FileNotFoundError:
         return {}
 
 def save_user(username, password):
-    with open("users.txt", "a") as file:
+    with open("data/users.txt", "a") as file:
         file.write(f"{username}:{hash_password(password)}\n")
 
 def authenticate(username, password):
@@ -102,7 +102,7 @@ class EmotionDetectionSystem:
         preprocessed = np.expand_dims(preprocessed, axis=0)
         return preprocessed
 
-def load_tasks_from_file(filename="tasks.txt"):
+def load_tasks_from_file(filename="data/tasks.txt"):
     try:
         with open(filename, "r") as file:
             tasks = file.readlines()
