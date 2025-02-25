@@ -5,6 +5,27 @@ from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing.image import img_to_array
 from scipy.ndimage import gaussian_filter
 import time
+import hashlib
+
+# User authentication system
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def load_users():
+    try:
+        with open("users.txt", "r") as file:
+            users = dict(line.strip().split(":") for line in file)
+        return users
+    except FileNotFoundError:
+        return {}
+
+def save_user(username, password):
+    with open("users.txt", "a") as file:
+        file.write(f"{username}:{hash_password(password)}\n")
+
+def authenticate(username, password):
+    users = load_users()
+    return users.get(username) == hash_password(password)
 
 class EmotionDetectionSystem:
     def __init__(self, model_path='Models/emotion_model_best.keras'):
@@ -19,15 +40,16 @@ class EmotionDetectionSystem:
 
         face_roi = frame[y1:y2, x1:x2]
         if face_roi.size == 0:
-            return None
+            return None, None
 
         preprocessed_face = self.preprocess_face(face_roi)
         emotion_predictions = self.emotion_model.predict(preprocessed_face)
 
-        emotion_label = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral'][np.argmax(emotion_predictions)]
+        emotions = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
+        emotion_label = emotions[np.argmax(emotion_predictions)]
         confidence = np.max(emotion_predictions)
 
-        return emotion_label, confidence, (x1, y1, x2, y2)
+        return emotion_label, confidence
 
     def capture_and_process_frames(self):
         cap = cv2.VideoCapture(0)
@@ -44,19 +66,24 @@ class EmotionDetectionSystem:
             equalized = cv2.equalizeHist(gray)
             faces = self.face_cascade.detectMultiScale(equalized, scaleFactor=1.1, minNeighbors=6, minSize=(30, 30))
 
+            detected_mood = "Detecting..."
+            assigned_task = "No task assigned."
             for (x, y, w, h) in faces:
-                emotion_label, confidence, (x1, y1, x2, y2) = self.process_face((frame, (x, y, w, h)))
+                emotion_label, confidence = self.process_face((frame, (x, y, w, h)))
 
+                if emotion_label:
+                    detected_mood = f"{emotion_label} ({confidence:.2f})"
+                    assigned_task = assign_task_based_on_mood(emotion_label)
+                
                 color = (0, 255, 0)  # Color for bounding box
-                cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-
+                cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
                 label = f"{emotion_label}: {confidence:.2f}"
-                cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2)
+                cv2.putText(frame, label, (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2)
 
             _, buffer = cv2.imencode('.jpg', frame)
             frame_bytes = buffer.tobytes()
 
-            yield frame_bytes
+            yield frame_bytes, detected_mood, assigned_task
 
         cap.release()
 
@@ -75,18 +102,61 @@ class EmotionDetectionSystem:
         preprocessed = np.expand_dims(preprocessed, axis=0)
         return preprocessed
 
+def load_tasks_from_file(filename="tasks.txt"):
+    try:
+        with open(filename, "r") as file:
+            tasks = file.readlines()
+        return {line.split(':')[0].strip(): line.split(':')[1].strip() for line in tasks if ':' in line}
+    except FileNotFoundError:
+        return {}
+
+def assign_task_based_on_mood(mood):
+    task_dict = load_tasks_from_file()
+    return task_dict.get(mood, "No specific task assigned.")
+
 def main():
-    st.title("Real-time Emotion Detection")
-    st.write("This is a real-time emotion detection system using your webcam.")
+    st.title("Real-time Emotion Detection and Task Manager")
+    
+    users = load_users()
+    
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+
+    if not st.session_state.authenticated:
+        choice = st.sidebar.selectbox("Login / Register", ["Login", "Register"])
+        username = st.sidebar.text_input("Username")
+        password = st.sidebar.text_input("Password", type="password")
+        
+        if choice == "Register":
+            if st.sidebar.button("Register"):
+                if username and password:
+                    if username in users:
+                        st.sidebar.warning("Username already exists!")
+                    else:
+                        save_user(username, password)
+                        st.sidebar.success("User registered successfully!")
+                else:
+                    st.sidebar.warning("Please enter a username and password.")
+        else:
+            if st.sidebar.button("Login"):
+                if authenticate(username, password):
+                    st.session_state.authenticated = True
+                    st.session_state.username = username
+                    st.sidebar.success("Login successful!")
+                else:
+                    st.sidebar.error("Invalid username or password.")
+        return
 
     system = EmotionDetectionSystem(model_path='Models/emotion_model_best.keras')
 
-    # Streamlit Video placeholder
     video_placeholder = st.empty()
+    detected_mood_placeholder = st.empty()
+    assigned_task_placeholder = st.empty()
 
-    # Start capturing frames
-    for frame_bytes in system.capture_and_process_frames():
+    for frame_bytes, mood, assigned_task in system.capture_and_process_frames():
         video_placeholder.image(frame_bytes, channels="BGR", use_container_width=True)
+        detected_mood_placeholder.text(f"Detected Mood: {mood}")
+        assigned_task_placeholder.text(f"Assigned Task: {assigned_task}")
 
 if __name__ == "__main__":
     main()
