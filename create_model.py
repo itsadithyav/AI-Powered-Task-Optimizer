@@ -31,7 +31,7 @@ def create_or_load_model():
         x = MaxPooling2D(pool_size=(2, 2))(x)
         x = Dropout(0.25)(x)
         x = Flatten()(x)
-        image_features = Dense(128, activation='relu')(x)
+        image_features =    Dense(128, activation='relu')(x)
         
         # Text input
         text_input = Input(shape=(TEXT_MAXLEN,), name='text_input')
