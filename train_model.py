@@ -15,7 +15,7 @@ set_global_policy('float32')
 tf.keras.mixed_precision.set_global_policy('mixed_float16')
 tf.data.experimental.enable_debug_mode()
 
-MODEL_PATH = 'Models/emotion_model_best.keras'
+MODEL_PATH = 'AI-Powered-Task-Optimizer/Models/multi_input_mood_model.keras'
 
 def prepare_data():
     """Load and preprocess datasets for text, audio, and facial recognition."""
