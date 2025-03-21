@@ -4,3 +4,4 @@ data/
 .vscode
 tempCodeRunnerFile.py
 face_model.keras
+pto_env/
